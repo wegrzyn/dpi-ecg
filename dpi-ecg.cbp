@@ -31,7 +31,10 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
+			<Add directory="eigen" />
 		</Compiler>
+		<Unit filename="dpi.cpp" />
+		<Unit filename="dpi.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />
