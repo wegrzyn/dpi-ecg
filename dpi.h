@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 #include <Eigen/Dense>
+#include <Eigen/Core>
+#include <unsupported/Eigen/FFT>
 
 using namespace std;
 using namespace Eigen;
@@ -14,10 +16,11 @@ using namespace Eigen;
 // ***DEFINES***
 #define FS 250.0
 #define FC 8.0
-
+#define PI 3.14159265358979323846
 
 // ***FUNCTIONS***
-MatrixXd readRecording(const char*);
-MatrixXd hpf(MatrixXd signal, double fc, double fs);
-
+MatrixXf readRecording(const char*);
+VectorXf hpf(VectorXf signal, float fc, float fs);
+VectorXf getHalfWaveOfSignal(VectorXf signal);
+MatrixXf getDenominators(int wnd, float p);
 #endif
