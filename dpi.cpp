@@ -7,9 +7,11 @@ vector<int> dpi_based_qrs_detector(VectorXf signal,float fs, float wnd, float p)
     int nWnd285 = n285 + nWnd;       //Computation window with additional 285 ms
     int currQrs = 1,prevQrs = 0;
     int indPrevQrs = 4;
+    int shift = 0;
     vector<int> qrs;
 
     VectorXf hhecg(nWnd),dpi(nWnd),der(nWnd);
+    VectorXi indPos,indNeg;
     MatrixXf dpi_denom(nWnd,nWnd);
 
     // Highpass filtering in the frequency domain (fc = 8 Hz)
@@ -30,7 +32,16 @@ vector<int> dpi_based_qrs_detector(VectorXf signal,float fs, float wnd, float p)
         // Derivative computation
         der = derivative(dpi);
 
+        tie(indPos,indNeg) = zeroCrossing(der.tail(nWnd-n285), 0.0);
+        indPos = indPos.array() + n285;
+        indNeg = indNeg.array() + n285;
 
+        cout << "Pos:" << indPos.transpose() << endl;
+        cout << "Neg:" << indNeg.transpose() << endl;
+
+        if (indPos(1) < indNeg(1)){
+            shift++;
+        };
 
         indPrevQrs +=200;
         qrs.push_back(indPrevQrs);
@@ -159,5 +170,31 @@ VectorXf derivative(VectorXf signal){
     d << -1,0,0,0,1;
     return convolve(signal,d,"same");
 }
+
+VectorXi findIndices(VectorXi P){
+    VectorXi I;
+    I = VectorXi::LinSpaced(P.size(),0,P.size()-1);
+    VectorXi IP = I;
+    IP.conservativeResize(stable_partition(
+      IP.data(),
+      IP.data()+IP.size(),
+      [&P](int i){return P(i)>0;})-IP.data());
+    return IP;
+    // Source: http://libigl.github.io/libigl/matlab-to-eigen.html
+}
+
+tuple<VectorXi,VectorXi> zeroCrossing(VectorXf der, float threshold){
+    size_t n = der.size();
+    VectorXi indPos, indNeg, moments(n-1), crossThreshold(n-1);
+    VectorXf sign(n-1);
+    sign = der.head(n-1).cwiseProduct(der.tail(n-1));
+    moments = (sign.array() <= 0).cast<int>();
+    crossThreshold = (der.head(n-1).array() > threshold).cast<int>();
+    indPos = findIndices(moments.cwiseProduct(crossThreshold));
+    crossThreshold = (der.head(n-1).array() < -threshold).cast<int>();
+    indNeg = findIndices(moments.cwiseProduct(crossThreshold));
+    return make_tuple(indPos,indNeg);
+}
+
 
 

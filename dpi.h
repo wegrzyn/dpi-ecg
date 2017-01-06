@@ -6,6 +6,9 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <tuple>
+#include <utility>
+#include <algorithm>
 #include <Eigen/Dense>
 #include <Eigen/Core>
 #include <unsupported/Eigen/FFT>
@@ -27,4 +30,6 @@ MatrixXf getDenominators(int wnd, float p);
 VectorXf convolve(VectorXf u, VectorXf v, string mode);
 VectorXf smooth(VectorXf signal);
 VectorXf derivative(VectorXf signal);
+VectorXi findIndices(VectorXi logicVector);
+tuple<VectorXi,VectorXi> zeroCrossing(VectorXf der, float threshold);
 #endif
