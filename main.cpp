@@ -1,23 +1,17 @@
 #include "dpi.h"
 
 int main(){
+    //Import signal form text file to MatrixXf,
+    //where columns are: time[probes], lead1, lead2
+    MatrixXf signal;
+    signal = readRecording("100.txt");
 
-  //Import signal form text file to MatrixXf,
-  //where columns are: time[probes], lead1, lead2
-  MatrixXf signal;
-  signal = readRecording("100.txt");
+    // Get only first lead to ECG analysis
+    VectorXf lead1(VectorXf::Map(signal.col(1).data(), signal.rows()));
 
-  // Get only first lead to ECG analysis
-  VectorXf lead1(VectorXf::Map(signal.col(1).data(), signal.rows()));
+    vector<int> qrs;
+    qrs = dpi_based_qrs_detector(lead1,FS, 1800.0, 5.0);
 
-  // Highpass filtering with cut-off frequency equal to 8Hz
-  lead1 = hpf(lead1,FC,FS);
-  lead1(0) = -100;
-  cout << lead1.head(10) << endl;
-  // Half-wave signal
-  lead1 = getHalfWaveOfSignal(lead1);
-
-  cout << lead1.head(10) << endl;
-
-  getDenominators(1800, 5.0);
+    for( size_t i = 0; i < qrs.size(); i++ )
+        printf( "%d, ", qrs[ i ] );
 }
