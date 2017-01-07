@@ -17,7 +17,7 @@ using namespace std;
 using namespace Eigen;
 
 // ***DEFINES***
-#define FS 250.0
+#define FS 360.0
 #define FC 8.0
 #define PI 3.14159265358979323846
 
@@ -32,4 +32,7 @@ VectorXf smooth(VectorXf signal);
 VectorXf derivative(VectorXf signal);
 VectorXi findIndices(VectorXi logicVector);
 tuple<VectorXi,VectorXi> zeroCrossing(VectorXf der, float threshold);
+int swing(VectorXf dpi, VectorXi indPos, VectorXi indNeg);
+VectorXf index(VectorXf vec, VectorXi ind);
+int improveComplex(int indexStart, int nPoints, VectorXf signal);
 #endif

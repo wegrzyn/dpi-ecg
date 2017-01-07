@@ -7,11 +7,9 @@ vector<int> dpi_based_qrs_detector(VectorXf signal,float fs, float wnd, float p)
     int nWnd285 = n285 + nWnd;       //Computation window with additional 285 ms
     int currQrs = 1,prevQrs = 0;
     int indPrevQrs = 4;
-    int shift = 0;
     vector<int> qrs;
-
     VectorXf hhecg(nWnd),dpi(nWnd),der(nWnd);
-    VectorXi indPos,indNeg;
+//    VectorXi indPos,indNeg;
     MatrixXf dpi_denom(nWnd,nWnd);
 
     // Highpass filtering in the frequency domain (fc = 8 Hz)
@@ -23,27 +21,40 @@ vector<int> dpi_based_qrs_detector(VectorXf signal,float fs, float wnd, float p)
 
 
     while (indPrevQrs < signal.size()-nWnd285){
+
+        VectorXi indPos,indNeg;
         // Half wave of filtered signal
-        hhecg = getHalfWaveOfSignal(signal.segment(indPrevQrs,nWnd));
+//        cout <<"Signal:\n" << signal.segment(indPrevQrs-4,nWnd).head(20).transpose() << endl;
+        hhecg = getHalfWaveOfSignal(signal.segment(indPrevQrs-4,nWnd));
         // Dynamic Plosion Index in window
+//        cout <<"HHECG:\n" << hhecg.transpose() << endl;
         dpi = (dpi_denom * hhecg).cwiseInverse();
         // Smoothing DPI
         dpi = smooth(dpi);
+//        cout <<"DPI:\n" << dpi.head(100).transpose() << endl;
         // Derivative computation
         der = derivative(dpi);
-
+//        cout <<"DER:\n" << der.head(100).transpose() << endl;
         tie(indPos,indNeg) = zeroCrossing(der.tail(nWnd-n285), 0.0);
-        indPos = indPos.array() + n285;
-        indNeg = indNeg.array() + n285;
+        indPos = indPos.array() + n285-1;
+        indNeg = indNeg.array() + n285-1;
 
-        cout << "Pos:" << indPos.transpose() << endl;
-        cout << "Neg:" << indNeg.transpose() << endl;
+//        cout << "Pos:" << indPos.transpose() << endl;
+//        cout << "Pos val:" << index(dpi,indPos).transpose() << endl;
+//        cout << "Neg:" << indNeg.transpose() << endl;
+//        cout << "Neg val:" << index(dpi,indNeg).transpose() << endl;
 
-        if (indPos(1) < indNeg(1)){
+        int shift = 0;
+        if (indPos(0) < indNeg(0)){
             shift++;
         };
 
-        indPrevQrs +=200;
+        shift += swing(dpi,indPos.segment(shift,indPos.size()-shift),indNeg);
+//        cout << "shift:" << indPos(shift) << endl;
+
+        indPrevQrs += indPos(shift);
+        indPrevQrs = improveComplex(indPrevQrs-n285, 2*n285, signal);
+
         qrs.push_back(indPrevQrs);
         prevQrs++;
         currQrs++;
@@ -78,6 +89,8 @@ MatrixXf readRecording(const char* pathToEcgFile){
 // Importing text file to Eigen Matrix
     std::ifstream myfile(pathToEcgFile);
     if (myfile.is_open()){
+            getline (myfile,line);
+            getline (myfile,line);
             while (getline (myfile,line)){
             line.erase(remove(line.begin(), line.end(),' '), line.end());
             d1 = line.find('\t');
@@ -93,7 +106,7 @@ MatrixXf readRecording(const char* pathToEcgFile){
     vsignal.insert(vsignal.end(), vlead2.begin(), vlead2.end());
     MatrixXf signal(vlead1.size(),3);
     signal = MatrixXf::Map(vsignal.data(),vlead1.size(),3);
-    cout << signal.block(0,0,10,3) << endl;
+//    cout << signal.block(0,0,10,3) << endl;
     return signal;
 };
 
@@ -122,6 +135,7 @@ VectorXf hpf(VectorXf signal, float fc, float fs){
 VectorXf getHalfWaveOfSignal(VectorXf signal){
     Array<bool, Dynamic,1> result = signal.array()>0.0;
     signal = signal.array().abs() * result.cast<float>();
+//    signal = signal.array() + 0.0000000001;
     return signal;
 }
 
@@ -185,6 +199,7 @@ VectorXi findIndices(VectorXi P){
 
 tuple<VectorXi,VectorXi> zeroCrossing(VectorXf der, float threshold){
     size_t n = der.size();
+//    cout << "Zero crossing:" << n << endl;
     VectorXi indPos, indNeg, moments(n-1), crossThreshold(n-1);
     VectorXf sign(n-1);
     sign = der.head(n-1).cwiseProduct(der.tail(n-1));
@@ -196,5 +211,28 @@ tuple<VectorXi,VectorXi> zeroCrossing(VectorXf der, float threshold){
     return make_tuple(indPos,indNeg);
 }
 
+int swing(VectorXf dpi, VectorXi indPos, VectorXi indNeg){
+    size_t n = min(indPos.size(),indNeg.size());
+    VectorXf sw(n);
+    sw = (index(dpi,indNeg.head(n)).array() - index(dpi,indPos.head(n)).array()).abs();
+//    cout << "Swing:\n " << sw << endl;
+    int maxIndex=0;
+    sw.maxCoeff(&maxIndex);
+//    cout << "Max:" << maxIndex <<endl;
+    return maxIndex;
+}
 
+VectorXf index(VectorXf vec, VectorXi ind){
+    VectorXf subvector(ind.size());
+    for (int i=0; i<ind.size();i++){
+        subvector(i) = vec(ind(i));
+    }
+    return subvector;
+}
+
+int improveComplex(int indexStart, int nPoints, VectorXf signal){
+    int maxIndex=0;
+    signal.segment(indexStart,nPoints).cwiseAbs().maxCoeff(&maxIndex);
+    return maxIndex+indexStart;
+}
 
