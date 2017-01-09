@@ -37,4 +37,5 @@ int swing(VectorXf dpi, VectorXi indPos, VectorXi indNeg);
 VectorXf index(VectorXf vec, VectorXi ind);
 int improveComplex(int indexStart, int nPoints, VectorXf signal);
 tuple<float,float,float> validateDetector(VectorXi trueAnnotation, VectorXi detectedComplexes,int window);
+void writeToFile(VectorXi qrs, const char*);
 #endif

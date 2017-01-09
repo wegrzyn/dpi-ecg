@@ -238,5 +238,19 @@ tuple<float,float,float> validateDetector(VectorXi trueAnnotation, VectorXi dete
     printf("Accuracy: %.2f%% Sensitivity: %.2f%% Precision: %.2f%%  wnd:%d probes",accuracy,sensitivity,precision,window);
     return make_tuple(accuracy,sensitivity,precision);
 }
+void writeToFile(VectorXi qrs, const char* pathToResultFile){
 
+    std::ofstream outputFile;
+    outputFile.open(pathToResultFile,fstream::out);
+    if (outputFile.is_open()){
+        outputFile << "Results of QRS detector using Dynamic Plosion Index."<<endl;
+        for (int it=0; it<qrs.size(); it++) {
+            outputFile << qrs[it]  <<endl;
+        }
+    outputFile.close();
+    }
+    else {
+         cout << "Unable to open file";
+    }
+}
 

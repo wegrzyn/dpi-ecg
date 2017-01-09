@@ -17,4 +17,6 @@ int main(){
     float sensitivity,precision,accuracy;
     int wnd = int(FS*0.150);
     tie(accuracy,sensitivity,precision) = validateDetector(ann, qrs, wnd);
+
+    writeToFile(qrs , "result.txt");
 }
