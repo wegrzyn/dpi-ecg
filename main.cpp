@@ -3,19 +3,18 @@
 int main(){
 //    Import signal form text file to MatrixXf,
 //    where columns are: time[probes], lead1, lead2
-    MatrixXf signal;
-    VectorXi annotation;
-    signal = readRecording("100.txt");
-    // Get only first lead to ECG analysis
-    VectorXf lead1(VectorXf::Map(signal.col(1).data(), signal.rows()));
+    VectorXf time,lead1,lead2;
+    VectorXi ann,qrs;
+
+    tie(time,lead1,lead2) = readRecording("100.txt");
 //    cout << "lead1:\n" << lead1.head(10) << endl;
-    vector<int> qrs;
     qrs = dpi_based_qrs_detector(lead1,FS, 1800.0, 5.0);
-
-    for( size_t i = 0; i < qrs.size(); i++ )
-        printf("%d, ", qrs[i]);
+//    cout << qrs.transpose() << endl;
 //        Get vector of annotations from file
-    annotation = readAnnotation("ann.txt");
-//    cout << annotation << endl;
+    ann = readAnnotation("ann100.txt");
+//    cout << ann.transpose() << endl;
 
+    float sensitivity,precision,accuracy;
+    int wnd = int(FS*0.150);
+    tie(accuracy,sensitivity,precision) = validateDetector(ann, qrs, wnd);
 }

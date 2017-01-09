@@ -22,8 +22,8 @@ using namespace Eigen;
 #define PI 3.14159265358979323846
 
 // ***FUNCTIONS***
-vector<int> dpi_based_qrs_detector(VectorXf signal,float fs,float wnd, float p);
-MatrixXf readRecording(const char*);
+VectorXi dpi_based_qrs_detector(VectorXf signal,float fs,float wnd, float p);
+tuple<VectorXf,VectorXf,VectorXf> readRecording(const char*);
 VectorXi readAnnotation(const char*);
 VectorXf hpf(VectorXf signal, float fc, float fs);
 VectorXf getHalfWaveOfSignal(VectorXf signal);
@@ -36,4 +36,5 @@ tuple<VectorXi,VectorXi> zeroCrossing(VectorXf der, float threshold);
 int swing(VectorXf dpi, VectorXi indPos, VectorXi indNeg);
 VectorXf index(VectorXf vec, VectorXi ind);
 int improveComplex(int indexStart, int nPoints, VectorXf signal);
+tuple<float,float,float> validateDetector(VectorXi trueAnnotation, VectorXi detectedComplexes,int window);
 #endif
