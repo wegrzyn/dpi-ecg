@@ -89,17 +89,17 @@ MatrixXf readRecording(const char* pathToEcgFile){
 // Importing text file to Eigen Matrix
     std::ifstream myfile(pathToEcgFile);
     if (myfile.is_open()){
-            getline (myfile,line);
-            getline (myfile,line);
-            while (getline (myfile,line)){
+        getline (myfile,line);
+        getline (myfile,line);
+        while (getline (myfile,line)){
             line.erase(remove(line.begin(), line.end(),' '), line.end());
             d1 = line.find('\t');
             d2 = line.find('\t',d1+1);
             vsignal.push_back(atof(line.substr(0,d1).c_str()));
             vlead1.push_back(atof(line.substr(d1,d2).c_str()));
             vlead2.push_back(atof(line.substr(d2,line.length()).c_str()));
-        }
-    myfile.close();
+            }
+        myfile.close();
     }
     else cout << "Unable to open file";
     vsignal.insert(vsignal.end(), vlead1.begin(), vlead1.end());
@@ -109,6 +109,27 @@ MatrixXf readRecording(const char* pathToEcgFile){
 //    cout << signal.block(0,0,10,3) << endl;
     return signal;
 };
+
+VectorXi readAnnotation(const char* pathToEcgFile){
+    string line,col1;
+    vector<int> vsignal;
+    int col2;
+
+// Importing text file to Eigen Vector
+    std::ifstream myfile(pathToEcgFile);
+    if (myfile.is_open()){
+        while (getline (myfile,line)){
+            std::istringstream ss(line);
+            ss >> col1 >> col2;
+            vsignal.push_back(col2);
+        }
+        myfile.close();
+    }
+    VectorXi annotation(vsignal.size(),1);
+    annotation = VectorXi::Map(vsignal.data(),vsignal.size(),1);
+//    cout << annotation.block(0,0,2274,1) << endl;
+    return annotation;
+}
 
 VectorXf hpf(VectorXf signal, float fc, float fs){
 

@@ -24,6 +24,7 @@ using namespace Eigen;
 // ***FUNCTIONS***
 vector<int> dpi_based_qrs_detector(VectorXf signal,float fs,float wnd, float p);
 MatrixXf readRecording(const char*);
+VectorXi readAnnotation(const char*);
 VectorXf hpf(VectorXf signal, float fc, float fs);
 VectorXf getHalfWaveOfSignal(VectorXf signal);
 MatrixXf getDenominators(int wnd, float p);
