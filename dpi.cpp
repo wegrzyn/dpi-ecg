@@ -41,7 +41,7 @@ VectorXi dpi_based_qrs_detector(VectorXf signal,float fs, float wnd, float p){
         };
         shift += swing(dpi,indPos.segment(shift,indPos.size()-shift),indNeg);
         indPrevQrs += indPos(shift);
-        indPrevQrs = improveComplex(indPrevQrs-int(fs*0.04), int(fs*0.08), signal);
+        indPrevQrs = improveComplex(indPrevQrs-n285, 2*n285, signal);
 
         vqrs.push_back(indPrevQrs);
         prevQrs++;
@@ -53,7 +53,7 @@ VectorXi dpi_based_qrs_detector(VectorXf signal,float fs, float wnd, float p){
     return qrs;
 }
 
-tuple<VectorXf,VectorXf,VectorXf> readRecording(const char* pathToEcgFile){
+tuple<VectorXf,VectorXf,VectorXf> readRecording(string pathToEcgFile){
     string line;
     float col1,col2,col3;
     vector<float> vtime,vlead1,vlead2;
@@ -71,7 +71,7 @@ tuple<VectorXf,VectorXf,VectorXf> readRecording(const char* pathToEcgFile){
             }
         myfile.close();
     }
-    else cout << "Unable to open file";
+    else cout << "Unable to open file" << endl;
     VectorXf time(vtime.size()),lead1(vlead1.size()),lead2(vlead1.size());
     time = VectorXf::Map(vtime.data(),vtime.size());
     lead1 = VectorXf::Map(vlead1.data(),vlead1.size());
@@ -79,7 +79,7 @@ tuple<VectorXf,VectorXf,VectorXf> readRecording(const char* pathToEcgFile){
     return make_tuple(time,lead1,lead2);
 };
 
-VectorXi readAnnotation(const char* pathToAnnotationFile){
+VectorXi readAnnotation(string pathToAnnotationFile){
     string line, col1;
     vector<int> ann;
     int col2;
@@ -201,6 +201,11 @@ int swing(VectorXf dpi, VectorXi indPos, VectorXi indNeg){
     sw = (index(dpi,indNeg.head(n)).array() - index(dpi,indPos.head(n)).array()).abs();
     int maxIndex=0;
     sw.maxCoeff(&maxIndex);
+    if (indPos(maxIndex)<150){
+        int prevIndex = maxIndex+1;
+        sw.segment(prevIndex,sw.size()-prevIndex).maxCoeff(&maxIndex);
+        maxIndex += prevIndex;
+    }
     return maxIndex;
 }
 
@@ -221,7 +226,6 @@ int improveComplex(int indexStart, int nPoints, VectorXf signal){
 tuple<float,float,float> validateDetector(VectorXi trueAnnotation, VectorXi detectedComplexes,int window){
     float sensitivity=0.0, precision=0.0, accuracy=0.0;
     float tp=0,fp=0,fn=0,tn=0;
-
     for(int i=0; i<trueAnnotation.size(); i++){
         if ((detectedComplexes.array()>=(trueAnnotation(i)-window)).cwiseProduct(detectedComplexes.array()<=(trueAnnotation(i)+window)).any()){
             tp++;
@@ -234,12 +238,10 @@ tuple<float,float,float> validateDetector(VectorXi trueAnnotation, VectorXi dete
     accuracy = (tp+tn)/(tp+tn+fp+fn)*100;
     sensitivity = tp/(tp+fn)*100;
     precision = tp/(tp+fp)*100;
-
     printf("Accuracy: %.2f%% Sensitivity: %.2f%% Precision: %.2f%%  wnd:%d probes",accuracy,sensitivity,precision,window);
     return make_tuple(accuracy,sensitivity,precision);
 }
-void writeToFile(VectorXi qrs, const char* pathToResultFile){
-
+void writeToFile(VectorXi qrs, string pathToResultFile){
     std::ofstream outputFile;
     outputFile.open(pathToResultFile,fstream::out);
     if (outputFile.is_open()){

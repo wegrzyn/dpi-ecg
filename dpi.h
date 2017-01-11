@@ -23,8 +23,8 @@ using namespace Eigen;
 
 // ***FUNCTIONS***
 VectorXi dpi_based_qrs_detector(VectorXf signal,float fs,float wnd, float p);
-tuple<VectorXf,VectorXf,VectorXf> readRecording(const char*);
-VectorXi readAnnotation(const char*);
+tuple<VectorXf,VectorXf,VectorXf> readRecording(string);
+VectorXi readAnnotation(string);
 VectorXf hpf(VectorXf signal, float fc, float fs);
 VectorXf getHalfWaveOfSignal(VectorXf signal);
 MatrixXf getDenominators(int wnd, float p);
@@ -37,5 +37,5 @@ int swing(VectorXf dpi, VectorXi indPos, VectorXi indNeg);
 VectorXf index(VectorXf vec, VectorXi ind);
 int improveComplex(int indexStart, int nPoints, VectorXf signal);
 tuple<float,float,float> validateDetector(VectorXi trueAnnotation, VectorXi detectedComplexes,int window);
-void writeToFile(VectorXi qrs, const char*);
+void writeToFile(VectorXi qrs, string);
 #endif

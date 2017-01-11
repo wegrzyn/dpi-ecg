@@ -1,22 +1,35 @@
 #include "dpi.h"
 
-int main(){
+int main(int argc,  char** argv){
 //    Import signal form text file to MatrixXf,
 //    where columns are: time[probes], lead1, lead2
     VectorXf time,lead1,lead2;
     VectorXi ann,qrs;
+    string signalPath, annPath, resultPath;
 
-    tie(time,lead1,lead2) = readRecording("100.txt");
+    signalPath = "100.txt";
+    annPath = "ann100.txt";
+    if (argc>1){
+        signalPath = argv[1];
+    }
+    if (argc>2){
+        annPath = argv[2];
+    }
+
+    tie(time,lead1,lead2) = readRecording(signalPath);
 //    cout << "lead1:\n" << lead1.head(10) << endl;
     qrs = dpi_based_qrs_detector(lead1,FS, 1800.0, 5.0);
 //    cout << qrs.transpose() << endl;
 //        Get vector of annotations from file
-    ann = readAnnotation("ann100.txt");
+    ann = readAnnotation(annPath);
 //    cout << ann.transpose() << endl;
 
     float sensitivity,precision,accuracy;
-    int wnd = int(FS*0.150);
+    int wnd = int(FS*0.100);
     tie(accuracy,sensitivity,precision) = validateDetector(ann, qrs, wnd);
 
-    writeToFile(qrs , "result.txt");
+    size_t dotPos = annPath.find_last_of(".");
+    resultPath = annPath.substr(0, dotPos);
+    resultPath += ".dpi";
+    writeToFile(qrs , resultPath);
 }
