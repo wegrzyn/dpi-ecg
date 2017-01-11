@@ -18,8 +18,6 @@ VectorXi dpi_based_qrs_detector(VectorXf signal,float fs, float wnd, float p){
     //Prepare triangle matrix of DPI denominators:
     dpi_denom = getDenominators(nWnd,p);
 
-
-
     while (indPrevQrs < signal.size()-nWnd285){
 
         VectorXi indPos,indNeg;
