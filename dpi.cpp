@@ -226,13 +226,13 @@ tuple<float,float,float> validateDetector(VectorXi trueAnnotation, VectorXi dete
     float tp=0,fp=0,fn=0,tn=0;
     for(int i=0; i<trueAnnotation.size(); i++){
         if ((detectedComplexes.array()>=(trueAnnotation(i)-window)).cwiseProduct(detectedComplexes.array()<=(trueAnnotation(i)+window)).any()){
-            tp++;
+            tp = tp+1;
         }
         else{
-            fn++;
+            fn = fn+1;
         }
     };
-    fp = detectedComplexes.size() - tp;
+    fp = max(detectedComplexes.size() - tp,float(0));
     accuracy = (tp+tn)/(tp+tn+fp+fn)*100;
     sensitivity = tp/(tp+fn)*100;
     precision = tp/(tp+fp)*100;
